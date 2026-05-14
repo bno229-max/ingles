@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Numbers Fun English - Premium</title>
+    <!-- Fonte Premium -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green-primary: #1ed760;
+            --green-shadow: #149943;
+            --green-neon: rgba(30, 215, 96, 0.4);
+            
+            --blue-primary: #29b6f6;
+            --blue-shadow: #0288d1;
+            
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 10px 30px rgba(31, 38, 135, 0.1);
+            
+            --text-dark: #2d3436;
+            --text-light: #636e72;
+            --white-pure: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; /* Fixo para evitar scroll na página inteira */
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+        /* CONTAINER DO APP CORRIGIDO PARA NÃO CORTAR */
+        #app-container {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            width: 100%; max-width: 428px; 
+            height: 100vh; /* Altura exata da tela */
+            display: flex; flex-direction: column; position: relative;
+            box-shadow: var(--glass-shadow);
+        }
+
+        @media (min-width: 430px) { #app-container { height: 92vh; border-radius: 40px; overflow: hidden; } }
+
+        /* OVERLAYS (Perfil) */
+        #onboarding-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.90); backdrop-filter: blur(15px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 999; padding: 20px; text-align: center;
+        }
+
+        #onboarding-overlay h1 { color: var(--text-dark); margin-bottom: 5px; font-size: 2.2rem; font-weight: 900; }
+        #onboarding-overlay p { color: var(--text-light); margin-bottom: 25px; font-weight: 500; font-size: 1rem; }
+
+        .avatar-selector { display: flex; gap: 20px; margin-bottom: 25px; }
+        .avatar-btn {
+            font-size: 3.5rem; background: var(--white-pure); border: 4px solid transparent;
+            border-radius: 25px; width: 90px; height: 90px; cursor: pointer;
+            transition: all 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.05); 
+            display: flex; justify-content: center; align-items: center;
+        }
+        .avatar-btn.selected { border-color: var(--blue-primary); transform: scale(1.1); box-shadow: 0 15px 30px rgba(41, 182, 246, 0.3); }
+
+        #name-input {
+            width: 100%; max-width: 300px; font-size: 1.3rem; text-align: center; padding: 15px;
+            background: rgba(255, 255, 255, 0.9); border: 2px solid transparent; border-radius: 20px;
+            font-weight: 800; color: var(--text-dark); margin-bottom: 25px; outline: none; transition: 0.3s;
+        }
+        #name-input:focus { border-color: var(--blue-primary); background: var(--white-pure); }
+
+        /* HEADER */
+        .app-header {
+            flex-shrink: 0; /* Impede de espremer o header */
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px 20px; background: rgba(255, 255, 255, 0.4);
+            border-bottom: 1px solid rgba(255,255,255,0.6); z-index: 10;
+        }
+        
+        .user-profile-header { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px 10px; border-radius: 15px; transition: 0.2s; }
+        .user-profile-header:hover { background: rgba(255,255,255,0.6); }
+        .avatar-small { font-size: 1.5rem; background: var(--white-pure); border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .user-name { font-weight: 800; font-size: 1rem; color: var(--text-dark); max-width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .header-stats { display: flex; gap: 10px; }
+        .stat-pill { background: rgba(255,255,255,0.8); padding: 5px 12px; border-radius: 15px; font-weight: 800; font-size: 1rem; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        /* CONTEÚDO DINÂMICO */
+        .app-content { 
+            flex: 1; /* Ocupa o resto do espaço disponível */
+            overflow-y: auto; 
+            padding: 15px 20px; 
+            display: flex; flex-direction: column; justify-content: center; /* Centraliza verticalmente o conteúdo */
+        }
+        .view { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+        /* COMPONENTES COMPACTADOS PARA CABER NA TELA */
+        .glass-panel {
+            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 24px; padding: 20px; width: 100%;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05); margin-bottom: 15px;
+        }
+
+        .character-prompt { display: flex; align-items: center; width: 100%; gap: 10px; flex-direction: column; margin-bottom: 10px; }
+        .mascot-wrapper {
+            background: rgba(255,255,255,0.8); width: 70px; height: 70px; border-radius: 25px;
+            display: flex; justify-content: center; align-items: center; font-size: 3rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); animation: float 4s infinite ease-in-out;
+        }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        .speech-bubble {
+            font-size: 1rem; font-weight: 700; color: var(--text-dark); text-align: center;
+            background: var(--white-pure); padding: 10px 20px; border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        /* INPUTS */
+        input[type="number"] {
+            width: 100%; font-size: 3rem; text-align: center; padding: 10px;
+            background: transparent; border: none; border-bottom: 4px solid rgba(255,255,255,0.8);
+            border-radius: 0; color: var(--text-dark); font-weight: 900; outline: none; transition: 0.3s;
+        }
+        input[type="number"]:focus { border-bottom-color: var(--blue-primary); }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .translation-board { width: 100%; min-height: 80px; display: flex; align-items: center; justify-content: center; text-align: center; margin-top: 10px; }
+        #english-output { font-size: 1.8rem; font-weight: 900; color: #1e3799; text-transform: uppercase; line-height: 1.2; text-shadow: 0 2px 5px rgba(255,255,255,0.8); }
+        .text-placeholder { color: rgba(45, 52, 54, 0.4) !important; font-size: 1.2rem !important; }
+
+        /* QUIZ OPTIONS COMPACTADOS */
+        .options-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 10px; }
+        .btn-option {
+            background: rgba(255,255,255,0.9); border: 2px solid var(--white-pure); border-radius: 15px;
+            padding: 15px; font-size: 1.8rem; font-weight: 900; color: var(--text-dark); cursor: pointer;
+            transition: all 0.2s; box-shadow: 0 5px 0 rgba(0,0,0,0.05); outline: none; display: flex; justify-content: center; align-items: center;
+        }
+        .btn-option:active { transform: translateY(5px); box-shadow: 0 0 0 transparent; }
+        .btn-option:hover { background: var(--white-pure); box-shadow: 0 6px 0 rgba(0,0,0,0.08); }
+
+        /* RANKING */
+        .ranking-list { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+        .ranking-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.7); padding: 12px 15px; border-radius: 15px;
+            font-weight: 800; font-size: 1rem; border: 1px solid rgba(255,255,255,0.5);
+        }
+        .ranking-item.me { background: var(--white-pure); border-color: var(--blue-primary); box-shadow: 0 4px 10px rgba(41, 182, 246, 0.2); }
+        .rank-info { display: flex; align-items: center; gap: 10px; }
+        .rank-pos { font-size: 1.2rem; width: 25px; text-align: center; }
+
+        /* FOOTER & BOTÕES */
+        .app-footer { 
+            flex-shrink: 0;
+            padding: 10px 20px; 
+            background: transparent; 
+        }
+        
+        .btn-app {
+            width: 100%; padding: 15px; border-radius: 20px; font-size: 1.1rem; font-weight: 800; letter-spacing: 1px;
+            text-transform: uppercase; border: none; cursor: pointer; color: white;
+            transition: all 0.2s; outline: none; position: relative; overflow: hidden;
+        }
+        .btn-app:active { transform: translateY(5px); box-shadow: 0 0px 0 transparent !important; }
+        
+        .btn-green { background: var(--green-primary); box-shadow: 0 6px 0 var(--green-shadow); }
+        .btn-green:hover { background: #2ffd7a; box-shadow: 0 6px 0 var(--green-shadow), 0 0 20px var(--green-neon); transform: translateY(-2px); }
+
+        .btn-blue { background: var(--blue-primary); box-shadow: 0 6px 0 var(--blue-shadow); }
+        .btn-ghost { background: rgba(255,255,255,0.6); border: 2px solid var(--blue-primary); color: var(--blue-primary); padding: 12px; border-radius: 18px; font-size: 1rem; font-weight: 800; cursor: pointer; width: 100%; transition: 0.3s; }
+
+        /* BOTTOM NAV INTEGRADA E FLUIDA */
+        .bottom-nav {
+            flex-shrink: 0;
+            display: flex; justify-content: space-around; 
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(15px); border-top: 1px solid rgba(255,255,255,0.6);
+            padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px);
+            width: 100%;
+        }
+        
+        .nav-item {
+            background: transparent; border: none; display: flex; flex-direction: column;
+            align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 800;
+            color: var(--text-light); cursor: pointer; padding: 8px 15px; border-radius: 15px; transition: 0.3s;
+        }
+        .nav-item .nav-icon { font-size: 1.3rem; filter: grayscale(100%); opacity: 0.5; transition: 0.3s; }
+        
+        .nav-item.active { background: rgba(41, 182, 246, 0.15); color: var(--blue-primary); }
+        .nav-item.active .nav-icon { filter: grayscale(0%); opacity: 1; transform: scale(1.1) translateY(-2px); }
+
+        .pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes pop { 0% { transform: scale(0.9); opacity: 0.5; } 50% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div id="app-container">
+        
+        <!-- TELA DE ONBOARDING -->
+        <div id="onboarding-overlay">
+            <div class="mascot-wrapper" style="margin-bottom: 15px; width: 100px; height: 100px; font-size: 4rem;">🗽</div>
+            <h1>Numbers Fun</h1>
+            <p>Seu app premium de inglês!</p>
+            
+            <div class="avatar-selector">
+                <button class="avatar-btn selected" data-avatar="👦">👦</button>
+                <button class="avatar-btn" data-avatar="👧">👧</button>
+            </div>
+            
+            <input type="text" id="name-input" placeholder="Qual o seu nome?" maxlength="12">
+            <button id="btn-start" class="btn-app btn-green" style="max-width: 300px;">SALVAR E JOGAR</button>
+        </div>
+
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="user-profile-header" id="btn-edit-profile" title="Editar Perfil">
+                <div id="header-avatar" class="avatar-small">👦</div>
+                <div class="user-info">
+                    <div id="header-name" class="user-name">...</div>
+                    <div style="font-size: 0.65rem; color: var(--text-light); font-weight: 700;">Editar Perfil ✏️</div>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-pill">🔥 <span id="streak-count">0</span></div>
+                <div class="stat-pill" style="color: var(--blue-primary);">💎 <span id="score-count">0</span></div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT (Agora rolável apenas se precisar, mas otimizado para caber tudo) -->
+        <main class="app-content">
+            
+            <!-- VIEW: APRENDER -->
+            <div id="view-learn" class="view active">
+                <div class="character-prompt">
+                    <div class="mascot-wrapper">🗽</div>
+                    <div class="speech-bubble">Digite um número!</div>
+                </div>
+                
+                <div class="glass-panel">
+                    <input type="number" id="num-input" placeholder="0" autocomplete="off" min="0" max="999999">
+                    <div class="translation-board">
+                        <h2 id="english-output" class="text-placeholder">...</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: DESAFIO -->
+            <div id="view-challenge" class="view" style="display: none;">
+                <div class="character-prompt">
+                    <div class="mascot-wrapper">🗽</div>
+                    <div class="speech-bubble" id="challenge-feedback">Ouça e escolha a opção correta!</div>
+                </div>
+                
+                <div id="challenge-options" class="options-grid">
+                    <!-- Botões gerados via JS -->
+                </div>
+            </div>
+
+            <!-- VIEW: RANKING -->
+            <div id="view-ranking" class="view" style="display: none;">
+                <div class="character-prompt">
+                    <div class="mascot-wrapper" style="font-size: 2.5rem;">🏆</div>
+                    <div class="speech-bubble">Melhores Jogadores!</div>
+                </div>
+                <div class="glass-panel" style="padding: 10px;">
+                    <div id="ranking-container" class="ranking-list">
+                        <!-- Gerado via JS -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- FOOTER & BOTÕES DE AÇÃO -->
+        <div class="app-footer">
+            <div id="actions-learn" class="action-group active">
+                <button id="btn-listen" class="btn-app btn-green">🔊 OUVIR NÚMERO</button>
+            </div>
+            <div id="actions-challenge" class="action-group" style="display: none;">
+                <button id="btn-play-audio-challenge" class="btn-ghost">🔊 REPETIR ÁUDIO</button>
+            </div>
+            <div id="actions-ranking" class="action-group" style="display: none;">
+                <button id="btn-play-more" class="btn-app btn-green">JOGAR DESAFIO</button>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAV CORRIGIDA (Sempre visível na base) -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-target="learn">
+                <span class="nav-icon">📖</span> <span>Aprender</span>
+            </button>
+            <button class="nav-item" data-target="challenge">
+                <span class="nav-icon">🎮</span> <span>Desafio</span>
+            </button>
+            <button class="nav-item" data-target="ranking">
+                <span class="nav-icon">🏆</span> <span>Ranking</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <script>
+        // ENGINE: Converte números para Inglês
+        const Engine = {
+            ones: ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'],
+            teens: ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'],
+            tens: ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'],
+            convert(num) {
+                if (num === 0) return 'Zero';
+                if (num > 999999) return 'Too big!';
+                const convertUnder1000 = (n) => {
+                    let str = '';
+                    if (n >= 100) { str += this.ones[Math.floor(n / 100)] + ' Hundred '; n %= 100; }
+                    if (n >= 10 && n <= 19) { str += this.teens[n - 10] + ' '; }
+                    else if (n >= 20) { str += this.tens[Math.floor(n / 10)] + ' '; if (n % 10 > 0) str += '- ' + this.ones[n % 10] + ' '; }
+                    else if (n > 0 && n < 10) { str += this.ones[n] + ' '; }
+                    return str.trim();
+                };
+                let res = '';
+                if (num >= 1000) { res += convertUnder1000(Math.floor(num / 1000)) + ' Thousand '; num %= 1000; }
+                if (num > 0) res += convertUnder1000(num);
+                return res.replace('- ', '-').trim();
+            }
+        };
+
+        // ENGINE: Voz do Google Translate
+        const Voice = {
+            currentAudio: null,
+            speak(text) {
+                if (this.currentAudio) {
+                    this.currentAudio.pause();
+                    this.currentAudio.currentTime = 0;
+                }
+                const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=en-US&client=tw-ob&q=${encodeURIComponent(text)}`;
+                this.currentAudio = new Audio(url);
+                this.currentAudio.play().catch(e => console.log(e));
+            }
+        };
+
+        // BUG CORRIGIDO: Motor de Confetes Autolimpante (Evita lentidão absurda)
+        const Confetti = {
+            ctx: document.getElementById('confetti-canvas').getContext('2d'),
+            particles: [],
+            animating: false, // Flag de segurança
+            
+            fire() {
+                const c = document.getElementById('confetti-canvas');
+                c.width = window.innerWidth; c.height = window.innerHeight;
+                const colors = ['#1ed760', '#29b6f6', '#ff9600', '#ff4b4b', '#9c27b0'];
+                
+                // Reduzido o número de partículas para melhor performance no mobile
+                for (let i = 0; i < 50; i++) {
+                    this.particles.push({
+                        x: c.width / 2, y: c.height / 2, r: Math.random() * 6 + 4,
+                        dx: Math.random() * 12 - 6, dy: Math.random() * -15 - 5,
+                        color: colors[Math.floor(Math.random() * colors.length)]
+                    });
+                }
+                
+                // Só inicia um novo loop se já não tiver um rodando
+                if(!this.animating) {
+                    this.animating = true;
+                    this.loop();
+                }
+            },
+            
+            loop() {
+                if(this.particles.length === 0) {
+                    // Limpa a tela e desativa a flag de animação quando os confetes somem
+                    this.animating = false;
+                    this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                    return; 
+                }
+                
+                requestAnimationFrame(() => this.loop());
+                
+                const c = document.getElementById('confetti-canvas');
+                this.ctx.clearRect(0, 0, c.width, c.height);
+                for (let i = 0; i < this.particles.length; i++) {
+                    let p = this.particles[i];
+                    this.ctx.beginPath(); this.ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    this.ctx.fillStyle = p.color; this.ctx.fill();
+                    p.x += p.dx; p.y += p.dy; p.dy += 0.6; // Gravidade ligeiramente maior
+                    
+                    if (p.y > c.height) { this.particles.splice(i, 1); i--; }
+                }
+            }
+        };
+
+        // CONTROLLER
+        const App = {
+            user: { name: '', avatar: '👦', score: 0, streak: 0 },
+            currentTarget: 0,
+            typingTimer: null, // Timer para a auto-fala
+            leaderboard: [
+                { name: 'Luna', avatar: '👧', score: 250 },
+                { name: 'Leo', avatar: '👦', score: 180 },
+                { name: 'Malu', avatar: '👧', score: 120 }
+            ],
+
+            init() {
+                this.checkProfile();
+                this.bindEvents();
+            },
+
+            checkProfile() {
+                const saved = localStorage.getItem('numFun_premium');
+                if (saved) {
+                    this.user = JSON.parse(saved);
+                    document.getElementById('onboarding-overlay').style.display = 'none';
+                    this.updateHeader();
+                }
+            },
+
+            saveProfile() {
+                localStorage.setItem('numFun_premium', JSON.stringify(this.user));
+                this.updateHeader();
+            },
+
+            updateHeader() {
+                document.getElementById('header-name').innerText = this.user.name;
+                document.getElementById('header-avatar').innerText = this.user.avatar;
+                document.getElementById('score-count').innerText = this.user.score;
+                document.getElementById('streak-count').innerText = this.user.streak;
+            },
+
+            bindEvents() {
+                let selectedAvatar = '👦';
+                document.querySelectorAll('.avatar-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('selected'));
+                        e.currentTarget.classList.add('selected');
+                        selectedAvatar = e.currentTarget.dataset.avatar;
+                    });
+                });
+
+                document.getElementById('btn-start').addEventListener('click', () => {
+                    const name = document.getElementById('name-input').value.trim();
+                    if (!name) return alert('Por favor, digite seu nome!');
+                    this.user.name = name;
+                    this.user.avatar = selectedAvatar;
+                    this.saveProfile();
+                    document.getElementById('onboarding-overlay').style.display = 'none';
+                    Voice.speak("Welcome " + name); 
+                });
+
+                document.getElementById('btn-edit-profile').addEventListener('click', () => {
+                    document.getElementById('onboarding-overlay').style.display = 'flex';
+                    document.getElementById('name-input').value = this.user.name;
+                    document.querySelectorAll('.avatar-btn').forEach(b => {
+                        b.classList.remove('selected');
+                        if (b.dataset.avatar === this.user.avatar) b.classList.add('selected');
+                    });
+                });
+
+                document.querySelectorAll('.nav-item').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.switchTab(e.currentTarget.dataset.target));
+                });
+                document.getElementById('btn-play-more').addEventListener('click', () => this.switchTab('challenge'));
+
+                const numInput = document.getElementById('num-input');
+                const output = document.getElementById('english-output');
+                
+                // BUG CORRIGIDO: Auto-fala no input com Debounce (espera a criança parar de digitar)
+                numInput.addEventListener('input', (e) => {
+                    // Limpa o timer anterior se ela continuar digitando rápido
+                    clearTimeout(this.typingTimer);
+                    
+                    const val = e.target.value;
+                    if(!val) { output.innerText = '...'; output.classList.add('text-placeholder'); return; }
+                    if (val > 999999) { e.target.value = 999999; }
+                    
+                    output.classList.remove('text-placeholder');
+                    const convertedText = Engine.convert(parseInt(e.target.value));
+                    output.innerText = convertedText;
+                    
+                    // Programa a fala para 800ms após parar de digitar
+                    this.typingTimer = setTimeout(() => {
+                        Voice.speak(convertedText);
+                        this.animate(output);
+                    }, 800);
+                });
+
+                // Botão de ouvir manualmente continua funcionando normalmente
+                document.getElementById('btn-listen').addEventListener('click', () => {
+                    if (numInput.value) {
+                        Voice.speak(Engine.convert(parseInt(numInput.value)));
+                        this.animate(output);
+                    }
+                });
+
+                document.getElementById('btn-play-audio-challenge').addEventListener('click', () => {
+                    Voice.speak(Engine.convert(this.currentTarget));
+                });
+            },
+
+            switchTab(tab) {
+                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+                document.querySelector(`[data-target="${tab}"]`).classList.add('active');
+
+                document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+                document.getElementById(`view-${tab}`).style.display = 'flex';
+
+                document.querySelectorAll('.action-group').forEach(a => a.style.display = 'none');
+                document.getElementById(`actions-${tab}`).style.display = 'block';
+
+                if(tab === 'challenge') this.startChallenge();
+                if(tab === 'ranking') this.renderRanking();
+            },
+
+            startChallenge() {
+                this.currentTarget = Math.floor(Math.random() * 100);
+                
+                const fb = document.getElementById('challenge-feedback');
+                fb.innerText = "Ouça e escolha a opção correta!";
+                fb.style.color = "var(--text-dark)";
+                
+                let options = [this.currentTarget];
+                while(options.length < 3) {
+                    let r = Math.floor(Math.random() * 100);
+                    if(!options.includes(r)) options.push(r);
+                }
+                options.sort(() => Math.random() - 0.5);
+
+                const container = document.getElementById('challenge-options');
+                container.innerHTML = '';
+                
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-option';
+                    btn.innerText = opt;
+                    btn.onclick = () => this.verifyOption(opt, btn);
+                    container.appendChild(btn);
+                });
+
+                Voice.speak(Engine.convert(this.currentTarget));
+            },
+
+            verifyOption(selected, btnElement) {
+                const fb = document.getElementById('challenge-feedback');
+                document.querySelectorAll('.btn-option').forEach(b => b.disabled = true);
+
+                if (selected === this.currentTarget) {
+                    fb.innerText = "EXCELENTE! 🎉";
+                    fb.style.color = "var(--green-primary)";
+                    
+                    btnElement.style.borderColor = "var(--green-primary)";
+                    btnElement.style.color = "var(--green-primary)";
+                    btnElement.style.boxShadow = "0 6px 0 var(--green-shadow), 0 0 15px var(--green-neon)";
+                    
+                    Voice.speak("Excellent!");
+                    Confetti.fire(); // Agora otimizado e sem lentidão
+                    
+                    this.user.score += 15;
+                    this.user.streak++;
+                    this.saveProfile();
+                    
+                    setTimeout(() => this.startChallenge(), 2500);
+                } else {
+                    fb.innerText = "Ops, tente de novo! ❌";
+                    fb.style.color = "#ff4b4b";
+                    
+                    btnElement.style.borderColor = "#ff4b4b";
+                    btnElement.style.color = "#ff4b4b";
+                    btnElement.style.boxShadow = "0 6px 0 #d63031";
+                    
+                    Voice.speak("Try again!");
+                    this.user.streak = 0;
+                    this.saveProfile();
+                    
+                    setTimeout(() => {
+                        document.querySelectorAll('.btn-option').forEach(b => b.disabled = false);
+                        btnElement.style.borderColor = "var(--white-pure)";
+                        btnElement.style.color = "var(--text-dark)";
+                        btnElement.style.boxShadow = "0 5px 0 rgba(0,0,0,0.05)";
+                        fb.innerText = "Ouça e escolha a opção correta!";
+                        fb.style.color = "var(--text-dark)";
+                    }, 1500);
+                }
+                this.animate(fb);
+            },
+
+            renderRanking() {
+                let currentRank = [...this.leaderboard];
+                currentRank = currentRank.filter(p => p.name !== this.user.name + " (Você)");
+                currentRank.push({ name: this.user.name + " (Você)", avatar: this.user.avatar, score: this.user.score, isMe: true });
+                currentRank.sort((a, b) => b.score - a.score);
+
+                const container = document.getElementById('ranking-container');
+                container.innerHTML = '';
+                const medals = ['🥇', '🥈', '🥉'];
+
+                currentRank.forEach((player, index) => {
+                    const posBadge = index < 3 ? medals[index] : `${index + 1}º`;
+                    const div = document.createElement('div');
+                    div.className = `ranking-item ${player.isMe ? 'me' : ''}`;
+                    div.innerHTML = `
+                        <div class="rank-info">
+                            <span class="rank-pos">${posBadge}</span>
+                            <span class="avatar-small">${player.avatar}</span>
+                            <span>${player.name}</span>
+                        </div>
+                        <div class="rank-score" style="color: var(--blue-primary); font-weight: 900;">💎 ${player.score}</div>
+                    `;
+                    container.appendChild(div);
+                });
+            },
+
+            animate(el) {
+                el.classList.remove('pop');
+                void el.offsetWidth; 
+                el.classList.add('pop');
+            }
+        };
+
+        window.onload = () => App.init();
+    </script>
+</body>
+</html>
