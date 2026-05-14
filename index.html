@@ -31,7 +31,8 @@
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
             display: flex; justify-content: center; align-items: center; 
-            height: 100vh; /* Fixo para evitar scroll na página inteira */
+            /* Uso do dvh para resolver o corte em celulares */
+            height: 100vh; height: 100dvh; 
             overflow: hidden;
         }
 
@@ -43,19 +44,18 @@
 
         #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
 
-        /* CONTAINER DO APP CORRIGIDO PARA NÃO CORTAR */
+        /* CONTAINER DO APP COM DVH PARA NÃO CORTAR O RODAPÉ */
         #app-container {
             background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--glass-border);
             width: 100%; max-width: 428px; 
-            height: 100vh; /* Altura exata da tela */
+            height: 100vh; height: 100dvh; /* A mágica acontece aqui */
             display: flex; flex-direction: column; position: relative;
             box-shadow: var(--glass-shadow);
         }
 
-        @media (min-width: 430px) { #app-container { height: 92vh; border-radius: 40px; overflow: hidden; } }
+        @media (min-width: 430px) { #app-container { height: 92vh; height: 92dvh; border-radius: 40px; overflow: hidden; } }
 
         /* OVERLAYS (Perfil) */
         #onboarding-overlay {
@@ -86,7 +86,7 @@
 
         /* HEADER */
         .app-header {
-            flex-shrink: 0; /* Impede de espremer o header */
+            flex-shrink: 0; 
             display: flex; align-items: center; justify-content: space-between;
             padding: 15px 20px; background: rgba(255, 255, 255, 0.4);
             border-bottom: 1px solid rgba(255,255,255,0.6); z-index: 10;
@@ -102,14 +102,13 @@
 
         /* CONTEÚDO DINÂMICO */
         .app-content { 
-            flex: 1; /* Ocupa o resto do espaço disponível */
+            flex: 1; 
             overflow-y: auto; 
             padding: 15px 20px; 
-            display: flex; flex-direction: column; justify-content: center; /* Centraliza verticalmente o conteúdo */
+            display: flex; flex-direction: column; justify-content: center; 
         }
         .view { width: 100%; display: flex; flex-direction: column; align-items: center; }
 
-        /* COMPONENTES COMPACTADOS PARA CABER NA TELA */
         .glass-panel {
             background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border); border-radius: 24px; padding: 20px; width: 100%;
@@ -143,7 +142,7 @@
         #english-output { font-size: 1.8rem; font-weight: 900; color: #1e3799; text-transform: uppercase; line-height: 1.2; text-shadow: 0 2px 5px rgba(255,255,255,0.8); }
         .text-placeholder { color: rgba(45, 52, 54, 0.4) !important; font-size: 1.2rem !important; }
 
-        /* QUIZ OPTIONS COMPACTADOS */
+        /* QUIZ OPTIONS */
         .options-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 10px; }
         .btn-option {
             background: rgba(255,255,255,0.9); border: 2px solid var(--white-pure); border-radius: 15px;
@@ -184,13 +183,14 @@
         .btn-blue { background: var(--blue-primary); box-shadow: 0 6px 0 var(--blue-shadow); }
         .btn-ghost { background: rgba(255,255,255,0.6); border: 2px solid var(--blue-primary); color: var(--blue-primary); padding: 12px; border-radius: 18px; font-size: 1rem; font-weight: 800; cursor: pointer; width: 100%; transition: 0.3s; }
 
-        /* BOTTOM NAV INTEGRADA E FLUIDA */
+        /* BOTTOM NAV */
         .bottom-nav {
             flex-shrink: 0;
             display: flex; justify-content: space-around; 
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(15px); border-top: 1px solid rgba(255,255,255,0.6);
-            padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px);
+            /* O env(safe-area) ajuda a não colar na barrinha inferior do iPhone */
+            padding: 10px 0 calc(env(safe-area-inset-bottom, 10px) + 5px);
             width: 100%;
         }
         
@@ -318,7 +318,7 @@
     </div>
 
     <script>
-        // ENGINE: Converte números para Inglês
+        // ENGINE: Converte números
         const Engine = {
             ones: ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'],
             teens: ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'],
@@ -341,21 +341,37 @@
             }
         };
 
-        // ENGINE: Voz do Google Translate
+        // ENGINE DE VOZ APRIMORADA (API NATIVA SEGURO PARA CELULAR)
         const Voice = {
-            currentAudio: null,
+            synth: window.speechSynthesis,
+            femaleVoice: null,
+            init() {
+                const load = () => {
+                    const voices = this.synth.getVoices().filter(v => v.lang.startsWith('en'));
+                    const femaleNames = ['samantha', 'zira', 'victoria', 'karen', 'moira', 'tessa', 'female', 'woman', 'girl', 'google us english'];
+                    this.femaleVoice = voices.find(v => femaleNames.some(name => v.name.toLowerCase().includes(name))) || voices[0];
+                };
+                load();
+                if (this.synth.onvoiceschanged !== undefined) this.synth.onvoiceschanged = load;
+            },
+            unlock() {
+                // Truque crucial para o celular: tocar um som silencioso no primeiro clique
+                const utterance = new SpeechSynthesisUtterance('');
+                utterance.volume = 0;
+                this.synth.speak(utterance);
+            },
             speak(text) {
-                if (this.currentAudio) {
-                    this.currentAudio.pause();
-                    this.currentAudio.currentTime = 0;
-                }
-                const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=en-US&client=tw-ob&q=${encodeURIComponent(text)}`;
-                this.currentAudio = new Audio(url);
-                this.currentAudio.play().catch(e => console.log(e));
+                this.synth.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                if (this.femaleVoice) utterance.voice = this.femaleVoice;
+                utterance.lang = 'en-US';
+                utterance.rate = 0.85;
+                utterance.pitch = 1.2;
+                this.synth.speak(utterance);
             }
         };
 
-        // ENGINE: Motor de Confetes Autolimpante
+        // ENGINE: Confetes Autolimpante
         const Confetti = {
             ctx: document.getElementById('confetti-canvas').getContext('2d'),
             particles: [],
@@ -406,7 +422,6 @@
         const App = {
             user: { name: '', avatar: '👦', score: 0, streak: 0 },
             currentTarget: 0,
-            typingTimer: null, 
             leaderboard: [
                 { name: 'Luna', avatar: '👧', score: 250 },
                 { name: 'Leo', avatar: '👦', score: 180 },
@@ -414,6 +429,7 @@
             ],
 
             init() {
+                Voice.init();
                 this.checkProfile();
                 this.bindEvents();
             },
@@ -456,7 +472,10 @@
                     this.user.avatar = selectedAvatar;
                     this.saveProfile();
                     document.getElementById('onboarding-overlay').style.display = 'none';
-                    Voice.speak("Welcome " + name); 
+                    
+                    // Desbloqueia o áudio no celular na primeira interação real
+                    Voice.unlock();
+                    setTimeout(() => Voice.speak("Welcome " + name), 300); 
                 });
 
                 document.getElementById('btn-edit-profile').addEventListener('click', () => {
@@ -476,21 +495,15 @@
                 const numInput = document.getElementById('num-input');
                 const output = document.getElementById('english-output');
                 
+                // Removida a "fala automática" ao digitar. 
+                // Celulares exigem que a fala venha de um clique em botão.
                 numInput.addEventListener('input', (e) => {
-                    clearTimeout(this.typingTimer);
-                    
                     const val = e.target.value;
                     if(!val) { output.innerText = '...'; output.classList.add('text-placeholder'); return; }
                     if (val > 999999) { e.target.value = 999999; }
                     
                     output.classList.remove('text-placeholder');
-                    const convertedText = Engine.convert(parseInt(e.target.value));
-                    output.innerText = convertedText;
-                    
-                    this.typingTimer = setTimeout(() => {
-                        Voice.speak(convertedText);
-                        this.animate(output);
-                    }, 800);
+                    output.innerText = Engine.convert(parseInt(e.target.value));
                 });
 
                 document.getElementById('btn-listen').addEventListener('click', () => {
