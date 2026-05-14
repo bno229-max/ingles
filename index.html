@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Numbers Fun English - Premium</title>
+    <title>Números em Inglês</title>
     <!-- Fonte Premium -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -217,8 +217,8 @@
         <!-- TELA DE ONBOARDING -->
         <div id="onboarding-overlay">
             <div class="mascot-wrapper" style="margin-bottom: 15px; width: 100px; height: 100px; font-size: 4rem;">🗽</div>
-            <h1>Numbers Fun</h1>
-            <p>Seu app premium de inglês!</p>
+            <h1>Números em Inglês</h1>
+            <p>Aprenda números em inglês!</p>
             
             <div class="avatar-selector">
                 <button class="avatar-btn selected" data-avatar="👦">👦</button>
@@ -244,7 +244,7 @@
             </div>
         </header>
 
-        <!-- MAIN CONTENT (Agora rolável apenas se precisar, mas otimizado para caber tudo) -->
+        <!-- MAIN CONTENT -->
         <main class="app-content">
             
             <!-- VIEW: APRENDER -->
@@ -302,7 +302,7 @@
             </div>
         </div>
 
-        <!-- BOTTOM NAV CORRIGIDA (Sempre visível na base) -->
+        <!-- BOTTOM NAV -->
         <nav class="bottom-nav">
             <button class="nav-item active" data-target="learn">
                 <span class="nav-icon">📖</span> <span>Aprender</span>
@@ -355,18 +355,17 @@
             }
         };
 
-        // BUG CORRIGIDO: Motor de Confetes Autolimpante (Evita lentidão absurda)
+        // ENGINE: Motor de Confetes Autolimpante
         const Confetti = {
             ctx: document.getElementById('confetti-canvas').getContext('2d'),
             particles: [],
-            animating: false, // Flag de segurança
+            animating: false,
             
             fire() {
                 const c = document.getElementById('confetti-canvas');
                 c.width = window.innerWidth; c.height = window.innerHeight;
                 const colors = ['#1ed760', '#29b6f6', '#ff9600', '#ff4b4b', '#9c27b0'];
                 
-                // Reduzido o número de partículas para melhor performance no mobile
                 for (let i = 0; i < 50; i++) {
                     this.particles.push({
                         x: c.width / 2, y: c.height / 2, r: Math.random() * 6 + 4,
@@ -375,7 +374,6 @@
                     });
                 }
                 
-                // Só inicia um novo loop se já não tiver um rodando
                 if(!this.animating) {
                     this.animating = true;
                     this.loop();
@@ -384,7 +382,6 @@
             
             loop() {
                 if(this.particles.length === 0) {
-                    // Limpa a tela e desativa a flag de animação quando os confetes somem
                     this.animating = false;
                     this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
                     return; 
@@ -398,7 +395,7 @@
                     let p = this.particles[i];
                     this.ctx.beginPath(); this.ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
                     this.ctx.fillStyle = p.color; this.ctx.fill();
-                    p.x += p.dx; p.y += p.dy; p.dy += 0.6; // Gravidade ligeiramente maior
+                    p.x += p.dx; p.y += p.dy; p.dy += 0.6; 
                     
                     if (p.y > c.height) { this.particles.splice(i, 1); i--; }
                 }
@@ -409,7 +406,7 @@
         const App = {
             user: { name: '', avatar: '👦', score: 0, streak: 0 },
             currentTarget: 0,
-            typingTimer: null, // Timer para a auto-fala
+            typingTimer: null, 
             leaderboard: [
                 { name: 'Luna', avatar: '👧', score: 250 },
                 { name: 'Leo', avatar: '👦', score: 180 },
@@ -479,9 +476,7 @@
                 const numInput = document.getElementById('num-input');
                 const output = document.getElementById('english-output');
                 
-                // BUG CORRIGIDO: Auto-fala no input com Debounce (espera a criança parar de digitar)
                 numInput.addEventListener('input', (e) => {
-                    // Limpa o timer anterior se ela continuar digitando rápido
                     clearTimeout(this.typingTimer);
                     
                     const val = e.target.value;
@@ -492,14 +487,12 @@
                     const convertedText = Engine.convert(parseInt(e.target.value));
                     output.innerText = convertedText;
                     
-                    // Programa a fala para 800ms após parar de digitar
                     this.typingTimer = setTimeout(() => {
                         Voice.speak(convertedText);
                         this.animate(output);
                     }, 800);
                 });
 
-                // Botão de ouvir manualmente continua funcionando normalmente
                 document.getElementById('btn-listen').addEventListener('click', () => {
                     if (numInput.value) {
                         Voice.speak(Engine.convert(parseInt(numInput.value)));
@@ -567,7 +560,7 @@
                     btnElement.style.boxShadow = "0 6px 0 var(--green-shadow), 0 0 15px var(--green-neon)";
                     
                     Voice.speak("Excellent!");
-                    Confetti.fire(); // Agora otimizado e sem lentidão
+                    Confetti.fire(); 
                     
                     this.user.score += 15;
                     this.user.streak++;
